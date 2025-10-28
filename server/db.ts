@@ -1,6 +1,17 @@
-import { eq } from "drizzle-orm";
+import { eq, and, desc, gte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { 
+  InsertUser, 
+  users,
+  monitoringLocations,
+  weatherDataCache,
+  fogPredictions,
+  queryHistory,
+  InsertMonitoringLocation,
+  InsertWeatherDataCache,
+  InsertFogPrediction,
+  InsertQueryHistory,
+} from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -18,6 +29,9 @@ export async function getDb() {
   return _db;
 }
 
+/**
+ * 用户相关查询
+ */
 export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) {
     throw new Error("User openId is required for upsert");
@@ -85,8 +99,167 @@ export async function getUser(openId: string) {
   }
 
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+/**
+ * 监测地点相关查询
+ */
+export async function createMonitoringLocation(location: InsertMonitoringLocation) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(monitoringLocations).values(location);
+  return result;
+}
+
+export async function getUserMonitoringLocations(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db
+    .select()
+    .from(monitoringLocations)
+    .where(eq(monitoringLocations.userId, userId));
+}
+
+export async function getMonitoringLocation(locationId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db
+    .select()
+    .from(monitoringLocations)
+    .where(eq(monitoringLocations.id, locationId))
+    .limit(1);
+  
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function updateMonitoringLocation(
+  locationId: number,
+  updates: Partial<Omit<InsertMonitoringLocation, 'userId'>>
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db
+    .update(monitoringLocations)
+    .set(updates)
+    .where(eq(monitoringLocations.id, locationId));
+}
+
+export async function deleteMonitoringLocation(locationId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db
+    .delete(monitoringLocations)
+    .where(eq(monitoringLocations.id, locationId));
+}
+
+/**
+ * 气象数据缓存相关查询
+ */
+export async function cacheWeatherData(data: InsertWeatherDataCache) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db.insert(weatherDataCache).values(data);
+}
+
+export async function getWeatherDataCache(
+  locationId: number,
+  startTime: Date,
+  endTime: Date
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db
+    .select()
+    .from(weatherDataCache)
+    .where(
+      and(
+        eq(weatherDataCache.locationId, locationId),
+        gte(weatherDataCache.timestamp, startTime)
+      )
+    )
+    .orderBy(weatherDataCache.timestamp);
+}
+
+/**
+ * 晨雾预测相关查询
+ */
+export async function createFogPrediction(prediction: InsertFogPrediction) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db.insert(fogPredictions).values(prediction);
+}
+
+export async function getFogPrediction(locationId: number, forecastDate: Date) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const startOfDay = new Date(forecastDate);
+  startOfDay.setHours(0, 0, 0, 0);
+  
+  const endOfDay = new Date(forecastDate);
+  endOfDay.setHours(23, 59, 59, 999);
+  
+  const result = await db
+    .select()
+    .from(fogPredictions)
+    .where(
+      and(
+        eq(fogPredictions.locationId, locationId),
+        gte(fogPredictions.forecastDate, startOfDay)
+      )
+    )
+    .limit(1);
+  
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function getLocationFogPredictions(locationId: number, days: number = 7) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+  
+  return await db
+    .select()
+    .from(fogPredictions)
+    .where(
+      and(
+        eq(fogPredictions.locationId, locationId),
+        gte(fogPredictions.forecastDate, startDate)
+      )
+    )
+    .orderBy(desc(fogPredictions.forecastDate));
+}
+
+/**
+ * 查询历史相关查询
+ */
+export async function recordQueryHistory(history: InsertQueryHistory) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db.insert(queryHistory).values(history);
+}
+
+export async function getUserQueryHistory(userId: number, limit: number = 50) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db
+    .select()
+    .from(queryHistory)
+    .where(eq(queryHistory.userId, userId))
+    .orderBy(desc(queryHistory.createdAt))
+    .limit(limit);
+}
+

@@ -75,7 +75,7 @@ export default function WeatherDataTable({ data }: WeatherDataTableProps) {
                     <td className="text-center py-3 px-4">
                       <div className="flex items-center justify-center gap-1">
                         <Thermometer className="h-4 w-4 text-red-500" />
-                        <span>{item.temperature.toFixed(1)}°C</span>
+                        <span>{item.temperature !== undefined && item.temperature !== null ? item.temperature.toFixed(1) : '-'}°C</span>
                       </div>
                     </td>
                     <td className="text-center py-3 px-4">
@@ -91,29 +91,29 @@ export default function WeatherDataTable({ data }: WeatherDataTableProps) {
                       </div>
                     </td>
                     <td className="text-center py-3 px-4">
-                      {item.dewPoint.toFixed(1)}°C
+                      {item.dewPoint !== undefined && item.dewPoint !== null ? item.dewPoint.toFixed(1) : '-'}°C
                     </td>
                     <td className="text-center py-3 px-4">
                       <div
                         className={`inline-block px-2 py-1 rounded ${
-                          item.tempDewPointGap <= 3
+                          item.tempDewPointGap !== undefined && item.tempDewPointGap !== null && item.tempDewPointGap <= 3
                             ? "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 font-semibold"
                             : ""
                         }`}
                       >
-                        {item.tempDewPointGap.toFixed(1)}°C
+                        {item.tempDewPointGap !== undefined && item.tempDewPointGap !== null ? item.tempDewPointGap.toFixed(1) : '-'}°C
                       </div>
                     </td>
                     <td className="text-center py-3 px-4">
                       <div
                         className={`inline-flex items-center gap-1 px-2 py-1 rounded ${
-                          item.windSpeed <= 3
+                          item.windSpeed !== undefined && item.windSpeed !== null && item.windSpeed <= 3
                             ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-semibold"
                             : ""
                         }`}
                       >
                         <Wind className="h-4 w-4" />
-                        <span>{item.windSpeed.toFixed(1)} m/s</span>
+                        <span>{item.windSpeed !== undefined && item.windSpeed !== null ? item.windSpeed.toFixed(1) : '-'} m/s</span>
                       </div>
                     </td>
                     <td className="text-center py-3 px-4">

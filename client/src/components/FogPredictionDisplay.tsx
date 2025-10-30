@@ -12,7 +12,7 @@ export default function FogPredictionDisplay({
   data,
   location,
 }: FogPredictionDisplayProps) {
-  const { fogProbability, cloudLayerData, sunriseTime, blueHour, goldenHour } = data;
+  const { fogProbability, cloudLayerData, sunriseTime, blueHour, goldenHour } = data || {};
 
   const getRiskIcon = (level: string) => {
     switch (level) {
@@ -56,6 +56,7 @@ export default function FogPredictionDisplay({
   return (
     <div className="space-y-6">
       {/* 主风险指示 */}
+      {fogProbability ? (
       <Card className={getRiskColor(fogProbability.riskLevel)}>
         <CardHeader>
           <div className="flex items-start justify-between">
@@ -81,8 +82,16 @@ export default function FogPredictionDisplay({
           </div>
         </CardContent>
       </Card>
+      ) : (
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-center text-slate-500">正在加载晨雾预测数据...</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* 晨雾和平流雾概率对比 */}
+      {fogProbability && (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
@@ -150,8 +159,10 @@ export default function FogPredictionDisplay({
           </CardContent>
         </Card>
       </div>
+      )}
 
       {/* 影响因素 */}
+      {fogProbability && (
       <Card>
         <CardHeader>
           <CardTitle>影响因素分析</CardTitle>
@@ -206,8 +217,10 @@ export default function FogPredictionDisplay({
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* 日出和摄影时刻 */}
+      {sunriseTime && (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader>
@@ -261,8 +274,10 @@ export default function FogPredictionDisplay({
           </CardContent>
         </Card>
       </div>
+      )}
 
       {/* 云层信息 */}
+      {cloudLayerData && (
       <Card>
         <CardHeader>
           <CardTitle>云层覆盖率</CardTitle>
@@ -273,7 +288,7 @@ export default function FogPredictionDisplay({
             <div className="text-center p-4 rounded-lg bg-blue-50 dark:bg-blue-950">
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">低云层</p>
               <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {cloudLayerData.lowCloud.toFixed(0)}%
+                {cloudLayerData?.lowCloud !== undefined && cloudLayerData?.lowCloud !== null ? cloudLayerData.lowCloud.toFixed(0) : '-'}%
               </p>
               <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">0-2000米</p>
             </div>
@@ -281,7 +296,7 @@ export default function FogPredictionDisplay({
             <div className="text-center p-4 rounded-lg bg-purple-50 dark:bg-purple-950">
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">中云层</p>
               <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {cloudLayerData.midCloud.toFixed(0)}%
+                {cloudLayerData?.midCloud !== undefined && cloudLayerData?.midCloud !== null ? cloudLayerData.midCloud.toFixed(0) : '-'}%
               </p>
               <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">2000-6000米</p>
             </div>
@@ -289,13 +304,14 @@ export default function FogPredictionDisplay({
             <div className="text-center p-4 rounded-lg bg-indigo-50 dark:bg-indigo-950">
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">高云层</p>
               <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                {cloudLayerData.highCloud.toFixed(0)}%
+                {cloudLayerData?.highCloud !== undefined && cloudLayerData?.highCloud !== null ? cloudLayerData.highCloud.toFixed(0) : '-'}%
               </p>
               <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">6000米以上</p>
             </div>
           </div>
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }

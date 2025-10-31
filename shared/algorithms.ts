@@ -34,13 +34,19 @@ export class SunrisCalculator {
     // 计算UTC时间
     const utcTime = this.calculateUTCTime(dayOfYear, longitude, hourAngle);
     
-    // 转换为本地时间
-    const localTime = utcTime + timezone * 60; // 转换为分钟
+    // 转换为本地时间（分钟）
+    const localMinutes = utcTime + timezone * 60;
     
     // 创建日期对象
     const sunriseDate = new Date(date);
     sunriseDate.setHours(0, 0, 0, 0);
-    sunriseDate.setMinutes(sunriseDate.getMinutes() + localTime);
+    
+    // 正确处理超过24小时的情况
+    const totalMinutes = localMinutes % (24 * 60);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = Math.round(totalMinutes % 60);
+    
+    sunriseDate.setHours(hours, minutes, 0, 0);
     
     return sunriseDate;
   }

@@ -14,7 +14,7 @@ export default function FogPredictionDisplay({
 }: FogPredictionDisplayProps) {
   const { fogProbability, cloudLayerData, sunriseTime, blueHour, goldenHour } = data || {};
 
-  const getRiskIcon = (level: string) => {
+  const getProbabilityIcon = (level: string) => {
     switch (level) {
       case "high":
         return <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />;
@@ -27,7 +27,7 @@ export default function FogPredictionDisplay({
     }
   };
 
-  const getRiskColor = (level: string) => {
+  const getProbabilityColor = (level: string) => {
     switch (level) {
       case "high":
         return "fog-high";
@@ -40,14 +40,14 @@ export default function FogPredictionDisplay({
     }
   };
 
-  const getRiskText = (level: string) => {
+  const getProbabilityText = (level: string) => {
     switch (level) {
       case "high":
-        return "高风险";
+        return "高概率";
       case "medium":
-        return "中风险";
+        return "中概率";
       case "low":
-        return "低风险";
+        return "低概率";
       default:
         return "未知";
     }
@@ -57,16 +57,16 @@ export default function FogPredictionDisplay({
     <div className="space-y-6">
       {/* 主风险指示 */}
       {fogProbability ? (
-      <Card className={getRiskColor(fogProbability.riskLevel)}>
+      <Card className={getProbabilityColor(fogProbability.riskLevel)}>
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
-              <CardTitle className="text-2xl">晨雾风险评估</CardTitle>
+              <CardTitle className="text-2xl">晨雾概率评估</CardTitle>
               <CardDescription>
                 {location?.name} | {format(new Date(), "yyyy年MM月dd日", { locale: zhCN })}
               </CardDescription>
             </div>
-            {getRiskIcon(fogProbability.riskLevel)}
+            {getProbabilityIcon(fogProbability.riskLevel)}
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -76,8 +76,8 @@ export default function FogPredictionDisplay({
               <p className="text-3xl font-bold">{fogProbability.overallFogProbability}%</p>
             </div>
             <div>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">风险等级</p>
-              <p className="text-3xl font-bold">{getRiskText(fogProbability.riskLevel)}</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">概率等级</p>
+              <p className="text-3xl font-bold">{getProbabilityText(fogProbability.riskLevel)}</p>
             </div>
           </div>
         </CardContent>

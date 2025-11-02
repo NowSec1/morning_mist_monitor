@@ -143,12 +143,12 @@ const weatherRouter = router({
         const apiData = await response.json();
         const hourlyData = apiData.hourly;
 
-        // 计算日出时间
+        // 计算日出时间（使用北京时间 UTC+8）
         const sunriseTime = SunrisCalculator.calculateSunrise(
           input.latitude,
           input.longitude,
           date,
-          parseInt(input.timezone.split(":")[0]) || 8
+          8  // 北京时间（UTC+8）
         );
 
         // 获取摄影时刻
@@ -233,7 +233,7 @@ const weatherRouter = router({
         latitude: z.number(),
         longitude: z.number(),
         date: z.string().optional(),
-        timezone: z.string().default("Asia/Shanghai"),
+        timezone: z.string().default("Asia/Shanghai"),  // 使用北京时间（UTC+8）
       })
     )
     .query(async ({ input }) => {

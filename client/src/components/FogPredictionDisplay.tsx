@@ -228,10 +228,10 @@ export default function FogPredictionDisplay({
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">
-              {format(new Date(sunriseTime), "HH:mm")}
+              {String(sunriseTime.hour).padStart(2, '0')}:{String(sunriseTime.minute).padStart(2, '0')}
             </p>
             <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">
-              {format(new Date(sunriseTime), "yyyy年MM月dd日", { locale: zhCN })}
+              {format(new Date(), "yyyy年MM月dd日", { locale: zhCN })}
             </p>
           </CardContent>
         </Card>
@@ -245,11 +245,11 @@ export default function FogPredictionDisplay({
             <div className="space-y-1">
               <p className="text-sm">
                 <span className="font-semibold">开始：</span>
-                {format(new Date(blueHour.start), "HH:mm")}
+                {String(blueHour.start.hour).padStart(2, '0')}:{String(blueHour.start.minute).padStart(2, '0')}
               </p>
               <p className="text-sm">
                 <span className="font-semibold">结束：</span>
-                {format(new Date(blueHour.end), "HH:mm")}
+                {String(blueHour.end.hour).padStart(2, '0')}:{String(blueHour.end.minute).padStart(2, '0')}
               </p>
             </div>
           </CardContent>
@@ -264,11 +264,11 @@ export default function FogPredictionDisplay({
             <div className="space-y-1">
               <p className="text-sm">
                 <span className="font-semibold">开始：</span>
-                {format(new Date(goldenHour.start), "HH:mm")}
+                {String(goldenHour.start.hour).padStart(2, '0')}:{String(goldenHour.start.minute).padStart(2, '0')}
               </p>
               <p className="text-sm">
                 <span className="font-semibold">结束：</span>
-                {format(new Date(goldenHour.end), "HH:mm")}
+                {String(goldenHour.end.hour).padStart(2, '0')}:{String(goldenHour.end.minute).padStart(2, '0')}
               </p>
             </div>
           </CardContent>

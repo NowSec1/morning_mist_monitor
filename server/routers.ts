@@ -207,10 +207,22 @@ const weatherRouter = router({
 
         const cloudTrend = CloudLayerProcessor.analyzeTrend(cloudTrends);
 
+        // 格式化时间以避免时区转换问题
+        const formatTime = (date: Date) => ({
+          hour: date.getHours(),
+          minute: date.getMinutes(),
+        });
+
         return {
-          sunriseTime,
-          blueHour,
-          goldenHour,
+          sunriseTime: formatTime(sunriseTime),
+          blueHour: {
+            start: formatTime(blueHour.start),
+            end: formatTime(blueHour.end),
+          },
+          goldenHour: {
+            start: formatTime(goldenHour.start),
+            end: formatTime(goldenHour.end),
+          },
           fogProbability,
           cloudLayerData,
           cloudTrend,

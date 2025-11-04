@@ -24,6 +24,7 @@ import {
   OpenMeteoAdapter,
   type WeatherData,
 } from "@shared/algorithms";
+import { SunriseSunsetAPI } from "@shared/sunriseSunsetAPI";
 
 /**
  * 地点管理路由
@@ -143,20 +144,20 @@ const weatherRouter = router({
         const apiData = await response.json();
         const hourlyData = apiData.hourly;
 
-        // 计算日出时间（使用北京时间 UTC+8）
-        const sunriseTime = SunrisCalculator.calculateSunrise(
+        // 使用 SunriseSunset.io API 获取日出时间和金色时刻
+        const sunTimesData = await SunriseSunsetAPI.fetchSunTimes(
           input.latitude,
           input.longitude,
           date,
-          8  // 北京时间（UTC+8）
+          input.timezone
         );
 
-        // 获取摄影时刻
-        const blueHour = PhotographyTimings.getBlueHour(sunriseTime);
-        const goldenHour = PhotographyTimings.getGoldenHour(sunriseTime);
+        const sunriseTime = SunriseSunsetAPI.getSunriseTime(sunTimesData);
+        const blueHour = SunriseSunsetAPI.getBlueHour(sunriseTime);
+        const goldenHour = SunriseSunsetAPI.getGoldenHourRange(sunriseTime);
 
         // 获取日出前后2小时的气象数据
-        const sunriseHour = sunriseTime.getHours();
+        const sunriseHour = sunriseTime.hour;
         const startHour = Math.max(0, sunriseHour - 2);
         const endHour = Math.min(24, sunriseHour + 2);
 
@@ -207,22 +208,10 @@ const weatherRouter = router({
 
         const cloudTrend = CloudLayerProcessor.analyzeTrend(cloudTrends);
 
-        // 格式化时间以避免时区转换问题
-        const formatTime = (date: Date) => ({
-          hour: date.getHours(),
-          minute: date.getMinutes(),
-        });
-
         return {
-          sunriseTime: formatTime(sunriseTime),
-          blueHour: {
-            start: formatTime(blueHour.start),
-            end: formatTime(blueHour.end),
-          },
-          goldenHour: {
-            start: formatTime(goldenHour.start),
-            end: formatTime(goldenHour.end),
-          },
+          sunriseTime,
+          blueHour,
+          goldenHour,
           fogProbability,
           cloudLayerData,
           cloudTrend,

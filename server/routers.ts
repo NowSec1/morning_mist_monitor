@@ -157,24 +157,38 @@ const weatherRouter = router({
         const goldenHour = SunriseSunsetAPI.getGoldenHourRange(sunriseTime);
 
         // 获取日出前后2小时的气象数据
+        // 根据实际的时间戳来匹配，而不是用索引
         const sunriseHour = sunriseTime.hour;
-        const startHour = Math.max(0, sunriseHour - 2);
-        const endHour = Math.min(24, sunriseHour + 2);
+        const sunriseMinute = sunriseTime.minute;
+        const sunriseDate = new Date(date);
+        sunriseDate.setHours(sunriseHour, sunriseMinute, 0, 0);
+        
+        const startTime = new Date(sunriseDate);
+        startTime.setHours(startTime.getHours() - 2);
+        
+        const endTime = new Date(sunriseDate);
+        endTime.setHours(endTime.getHours() + 2);
 
         const hourlyWeatherData: WeatherData[] = [];
-        for (let i = startHour; i < endHour && i < hourlyData.time.length; i++) {
-          const weatherData: WeatherData = {
-            temperature: hourlyData.temperature_2m[i],
-            relativeHumidity: hourlyData.relative_humidity_2m[i],
-            dewPoint: hourlyData.dew_point_2m[i],
-            windSpeed: hourlyData.wind_speed_10m[i],
-            weatherCode: hourlyData.weather_code[i],
-            cloudCover: hourlyData.cloud_cover[i],
-            lowCloudCover: hourlyData.cloud_cover_low[i] || 0,
-            midCloudCover: hourlyData.cloud_cover_mid[i] || 0,
-            highCloudCover: hourlyData.cloud_cover_high[i] || 0,
-          };
-          hourlyWeatherData.push(weatherData);
+        for (let i = 0; i < hourlyData.time.length; i++) {
+          const timeStr = hourlyData.time[i];
+          const dataTime = new Date(timeStr);
+          
+          // 判断是否在日出前后2小时范围内
+          if (dataTime >= startTime && dataTime <= endTime) {
+            const weatherData: WeatherData = {
+              temperature: hourlyData.temperature_2m[i],
+              relativeHumidity: hourlyData.relative_humidity_2m[i],
+              dewPoint: hourlyData.dew_point_2m[i],
+              windSpeed: hourlyData.wind_speed_10m[i],
+              weatherCode: hourlyData.weather_code[i],
+              cloudCover: hourlyData.cloud_cover[i],
+              lowCloudCover: hourlyData.cloud_cover_low[i] || 0,
+              midCloudCover: hourlyData.cloud_cover_mid[i] || 0,
+              highCloudCover: hourlyData.cloud_cover_high[i] || 0,
+            };
+            hourlyWeatherData.push(weatherData);
+          }
         }
 
         // 计算晨雾概率
@@ -198,8 +212,8 @@ const weatherRouter = router({
         );
 
         // 分析云层趋势
-        const cloudTrends = hourlyWeatherData.map((data, index) => ({
-          time: new Date(hourlyData.time[startHour + index]),
+        const cloudTrends = hourlyWeatherData.map((data) => ({
+          time: new Date(),
           lowCloud: data.lowCloudCover,
           midCloud: data.midCloudCover,
           highCloud: data.highCloudCover,
@@ -215,8 +229,8 @@ const weatherRouter = router({
           fogProbability,
           cloudLayerData,
           cloudTrend,
-          hourlyWeatherData: hourlyWeatherData.map((data, index) => ({
-            time: new Date(hourlyData.time[startHour + index]),
+          hourlyWeatherData: hourlyWeatherData.map((data) => ({
+            time: new Date(),
             ...data,
             weatherDescription: OpenMeteoAdapter.getWeatherDescription(data.weatherCode),
           })),

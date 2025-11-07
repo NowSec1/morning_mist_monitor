@@ -160,22 +160,53 @@ const weatherRouter = router({
         // 根据实际的时间戳来匹配，而不是用索引
         const sunriseHour = sunriseTime.hour;
         const sunriseMinute = sunriseTime.minute;
-        const sunriseDate = new Date(date);
-        sunriseDate.setHours(sunriseHour, sunriseMinute, 0, 0);
+        const today = new Date();
+        const sunriseDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), sunriseHour, sunriseMinute, 0, 0);
+        
+        console.log("Sunrise time object:", sunriseTime);
+        console.log("Sunrise date:", sunriseDate.toISOString());
         
         const startTime = new Date(sunriseDate);
         startTime.setHours(startTime.getHours() - 2);
         
         const endTime = new Date(sunriseDate);
         endTime.setHours(endTime.getHours() + 2);
+        
+        console.log("Start time:", startTime.toISOString());
+        console.log("End time:", endTime.toISOString());
+        console.log("First API time:", hourlyData.time[0]);
+        console.log("Last API time:", hourlyData.time[hourlyData.time.length - 1]);
 
+        // 优先尝试按时间范围过滤，如果没有数据则使用所有数据
         const hourlyWeatherData: WeatherData[] = [];
+        let foundInRange = false;
+        
         for (let i = 0; i < hourlyData.time.length; i++) {
           const timeStr = hourlyData.time[i];
           const dataTime = new Date(timeStr);
           
-          // 判断是否在日出前后2小时范围内
+          // 判断u662fu5426在日出前u540e2小u65f6范围内
           if (dataTime >= startTime && dataTime <= endTime) {
+            const weatherData: WeatherData = {
+              temperature: hourlyData.temperature_2m[i],
+              relativeHumidity: hourlyData.relative_humidity_2m[i],
+              dewPoint: hourlyData.dew_point_2m[i],
+              windSpeed: hourlyData.wind_speed_10m[i],
+              weatherCode: hourlyData.weather_code[i],
+              cloudCover: hourlyData.cloud_cover[i],
+              lowCloudCover: hourlyData.cloud_cover_low[i] || 0,
+              midCloudCover: hourlyData.cloud_cover_mid[i] || 0,
+              highCloudCover: hourlyData.cloud_cover_high[i] || 0,
+            };
+            hourlyWeatherData.push(weatherData);
+            foundInRange = true;
+          }
+        }
+        
+        // 如果没有找到符合时间范围的数据，使用所有数据
+        if (!foundInRange) {
+          console.warn("No data found in time range, using all hourly data");
+          for (let i = 0; i < Math.min(hourlyData.time.length, 24); i++) {
             const weatherData: WeatherData = {
               temperature: hourlyData.temperature_2m[i],
               relativeHumidity: hourlyData.relative_humidity_2m[i],
@@ -192,7 +223,33 @@ const weatherRouter = router({
         }
 
         // 计算晨雾概率
-        const currentWeather = hourlyWeatherData[hourlyWeatherData.length - 1] || hourlyWeatherData[0];
+        if (hourlyWeatherData.length === 0) {
+          console.warn("No hourly weather data found for the sunrise time range");
+          console.log("Using first available data point as fallback");
+          // 使用第一条气象数据作为默认值
+          const temperature = hourlyData.temperature_2m?.[0] ?? 15;
+          const relativeHumidity = hourlyData.relative_humidity_2m?.[0] ?? 70;
+          const dewPoint = hourlyData.dew_point_2m?.[0] ?? 10;
+          const windSpeed = hourlyData.wind_speed_10m?.[0] ?? 2;
+          const weatherCode = hourlyData.weather_code?.[0] ?? 0;
+          const cloudCover = hourlyData.cloud_cover?.[0] ?? 50;
+          
+          const firstWeather: WeatherData = {
+            temperature,
+            relativeHumidity,
+            dewPoint,
+            windSpeed,
+            weatherCode,
+            cloudCover,
+            lowCloudCover: hourlyData.cloud_cover_low?.[0] ?? 0,
+            midCloudCover: hourlyData.cloud_cover_mid?.[0] ?? 0,
+            highCloudCover: hourlyData.cloud_cover_high?.[0] ?? 0,
+          };
+          console.log("Fallback weather data:", firstWeather);
+          hourlyWeatherData.push(firstWeather);
+        }
+
+        const currentWeather = hourlyWeatherData[hourlyWeatherData.length - 1];
         const previousWeather = hourlyWeatherData.length > 1 ? hourlyWeatherData[hourlyWeatherData.length - 2] : undefined;
 
         const fogProbability = FogProbabilityCalculator.calculateFogProbability(
@@ -237,7 +294,10 @@ const weatherRouter = router({
         };
       } catch (error) {
         console.error("Error fetching fog prediction:", error);
-        throw new Error("无法获取晨雾预测数据");
+        if (error instanceof Error) {
+          console.error("Error details:", error.message, error.stack);
+        }
+        throw new Error(`无法获取晨雾预测数据: ${error instanceof Error ? error.message : String(error)}`);
       }
     }),
 

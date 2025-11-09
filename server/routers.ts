@@ -179,6 +179,7 @@ const weatherRouter = router({
 
         // 优先尝试按时间范围过滤，如果没有数据则使用所有数据
         const hourlyWeatherData: WeatherData[] = [];
+        const hourlyWeatherTimes: string[] = [];
         let foundInRange = false;
         
         for (let i = 0; i < hourlyData.time.length; i++) {
@@ -199,6 +200,7 @@ const weatherRouter = router({
               highCloudCover: hourlyData.cloud_cover_high[i] || 0,
             };
             hourlyWeatherData.push(weatherData);
+            hourlyWeatherTimes.push(timeStr);
             foundInRange = true;
           }
         }
@@ -219,6 +221,7 @@ const weatherRouter = router({
               highCloudCover: hourlyData.cloud_cover_high[i] || 0,
             };
             hourlyWeatherData.push(weatherData);
+            hourlyWeatherTimes.push(hourlyData.time[i]);
           }
         }
 
@@ -286,8 +289,8 @@ const weatherRouter = router({
           fogProbability,
           cloudLayerData,
           cloudTrend,
-          hourlyWeatherData: hourlyWeatherData.map((data) => ({
-            time: new Date(),
+          hourlyWeatherData: hourlyWeatherData.map((data, index) => ({
+            time: new Date(hourlyWeatherTimes[index]),
             ...data,
             weatherDescription: OpenMeteoAdapter.getWeatherDescription(data.weatherCode),
           })),

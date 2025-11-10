@@ -11,6 +11,7 @@ import FogPredictionDisplay from "@/components/FogPredictionDisplay";
 import WeatherDataTable from "@/components/WeatherDataTable";
 import CloudLayerVisualization from "@/components/CloudLayerVisualization";
 import AlgorithmExplanation from "@/components/AlgorithmExplanation";
+import WeatherAlert from "@/components/WeatherAlert";
 import { Cloud, MapPin, Info, Settings } from "lucide-react";
 
 export default function Home() {
@@ -146,6 +147,14 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
+        {/* 天气预警通知 */}
+        {predictionData && selectedLocation && (
+          <WeatherAlert
+            fogProbability={predictionData.fogProbability?.overallFogProbability || 0}
+            location={selectedLocation.name}
+          />
+        )}
+
         <Tabs defaultValue="prediction" className="w-full">
           <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="prediction">晨雾预测</TabsTrigger>

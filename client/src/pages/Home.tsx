@@ -12,12 +12,14 @@ import WeatherDataTable from "@/components/WeatherDataTable";
 import CloudLayerVisualization from "@/components/CloudLayerVisualization";
 import AlgorithmExplanation from "@/components/AlgorithmExplanation";
 import WeatherAlert from "@/components/WeatherAlert";
-import { Cloud, MapPin, Info, Settings } from "lucide-react";
+import MultiDayForecast from "@/components/MultiDayForecast";
+import { Cloud, MapPin, Info, Settings, Calendar } from "lucide-react";
 
 export default function Home() {
   const { user, isAuthenticated, logout } = useAuth();
   const [selectedLocation, setSelectedLocation] = useState<{id: number; name: string; latitude: string; longitude: string; altitude: number | string; timezone: string} | null>(null);
   const [predictionData, setPredictionData] = useState<any>(null);
+  const [multiDayForecastData, setMultiDayForecastData] = useState<any>(null);
 
   // 获取用户的地点列表
   const { data: locations } = trpc.locations.list.useQuery(undefined, {
@@ -37,11 +39,31 @@ export default function Home() {
     }
   );
 
+  // 获取多日预报
+  const { data: multiDayResult, isLoading: isMultiDayLoading } = trpc.weather.getMultiDayForecast.useQuery(
+    selectedLocation ? {
+      latitude: parseFloat(selectedLocation.latitude),
+      longitude: parseFloat(selectedLocation.longitude),
+      altitude: typeof selectedLocation.altitude === 'string' ? parseInt(selectedLocation.altitude) : selectedLocation.altitude || 0,
+      timezone: selectedLocation.timezone || "Asia/Shanghai",
+      days: 7,
+    } : (undefined as any),
+    {
+      enabled: !!selectedLocation,
+    }
+  );
+
   useEffect(() => {
     if (predictionResult) {
       setPredictionData(predictionResult);
     }
   }, [predictionResult]);
+
+  useEffect(() => {
+    if (multiDayResult) {
+      setMultiDayForecastData(multiDayResult);
+    }
+  }, [multiDayResult]);
 
   // 如果未登录，显示登录提示
   if (!isAuthenticated) {
@@ -156,8 +178,9 @@ export default function Home() {
         )}
 
         <Tabs defaultValue="prediction" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="prediction">晨雾预测</TabsTrigger>
+            <TabsTrigger value="forecast">多日预报</TabsTrigger>
             <TabsTrigger value="weather">气象数据</TabsTrigger>
             <TabsTrigger value="cloud">云层分析</TabsTrigger>
             <TabsTrigger value="algorithm">算法说明</TabsTrigger>
@@ -200,6 +223,31 @@ export default function Home() {
                 )}
               </div>
             </div>
+          </TabsContent>
+
+          {/* 多日预报标签页 */}
+          <TabsContent value="forecast" className="space-y-6">
+            {isMultiDayLoading && (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-center h-64">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {multiDayForecastData && !isMultiDayLoading && (
+              <MultiDayForecast data={multiDayForecastData} />
+            )}
+
+            {!selectedLocation && !isMultiDayLoading && (
+              <Card className="border-dashed">
+                <CardContent className="pt-6 text-center text-slate-500 dark:text-slate-400">
+                  <p>请先选择地点查看多日预报</p>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* 气象数据标签页 */}

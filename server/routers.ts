@@ -304,6 +304,121 @@ const weatherRouter = router({
       }
     }),
 
+  // 获取未来3-7天的晨雾预报
+  getMultiDayForecast: publicProcedure
+    .input(
+      z.object({
+        latitude: z.number().min(-90).max(90),
+        longitude: z.number().min(-180).max(180),
+        altitude: z.number().int().min(0).default(0),
+        timezone: z.string().default("Asia/Shanghai"),
+        days: z.number().int().min(1).max(7).default(7),
+      })
+    )
+    .query(async ({ input }) => {
+      try {
+        const forecasts = [];
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        for (let i = 0; i < input.days; i++) {
+          const forecastDate = new Date(today);
+          forecastDate.setDate(forecastDate.getDate() + i);
+          const dateStr = forecastDate.toISOString().split("T")[0];
+
+          const apiUrl = new URL("https://api.open-meteo.com/v1/forecast");
+          apiUrl.searchParams.append("latitude", input.latitude.toString());
+          apiUrl.searchParams.append("longitude", input.longitude.toString());
+          apiUrl.searchParams.append("start_date", dateStr);
+          apiUrl.searchParams.append("end_date", dateStr);
+          apiUrl.searchParams.append(
+            "hourly",
+            [
+              "temperature_2m",
+              "relative_humidity_2m",
+              "dew_point_2m",
+              "weather_code",
+              "cloud_cover",
+              "cloud_cover_low",
+              "cloud_cover_mid",
+              "cloud_cover_high",
+              "wind_speed_10m",
+            ].join(",")
+          );
+          apiUrl.searchParams.append("timezone", input.timezone);
+
+          const response = await fetch(apiUrl.toString());
+          if (!response.ok) {
+            console.warn(`Failed to fetch forecast for ${dateStr}`);
+            continue;
+          }
+
+          const apiData = await response.json();
+          const hourlyData = apiData.hourly;
+
+          const sunTimesData = await SunriseSunsetAPI.fetchSunTimes(
+            input.latitude,
+            input.longitude,
+            new Date(dateStr),
+            input.timezone
+          );
+          const sunriseTime = SunriseSunsetAPI.getSunriseTime(sunTimesData);
+
+          const startTime = new Date(forecastDate);
+          startTime.setHours(sunriseTime.hour - 2, sunriseTime.minute, 0, 0);
+          const endTime = new Date(forecastDate);
+          endTime.setHours(sunriseTime.hour + 2, sunriseTime.minute, 0, 0);
+
+          let fogProbability = 0;
+          let dataCount = 0;
+
+          for (let j = 0; j < hourlyData.time.length; j++) {
+            const timeStr = hourlyData.time[j];
+            const currentTime = new Date(timeStr);
+
+            if (currentTime >= startTime && currentTime <= endTime) {
+              const weatherData: WeatherData = {
+                temperature: hourlyData.temperature_2m[j] || 0,
+                relativeHumidity: hourlyData.relative_humidity_2m[j] || 0,
+                dewPoint: hourlyData.dew_point_2m[j] || 0,
+                weatherCode: hourlyData.weather_code[j] || 0,
+                cloudCover: hourlyData.cloud_cover[j] || 0,
+                windSpeed: hourlyData.wind_speed_10m[j] || 0,
+                lowCloudCover: hourlyData.cloud_cover_low[j] || 0,
+                midCloudCover: hourlyData.cloud_cover_mid[j] || 0,
+                highCloudCover: hourlyData.cloud_cover_high[j] || 0,
+              };
+
+              const probability = FogProbabilityCalculator.calculateFogProbability(
+                weatherData,
+                weatherData
+              );
+              fogProbability += probability.overallFogProbability;
+              dataCount++;
+            }
+          }
+
+          const avgFogProbability = dataCount > 0 ? fogProbability / dataCount : 0;
+          const dayOfWeek = ["\u65e5", "\u4e00", "\u4e8c", "\u4e09", "\u56db", "\u4e94", "\u516d"][forecastDate.getDay()];
+
+          forecasts.push({
+            date: dateStr,
+            dayOfWeek,
+            fogProbability: Math.min(100, Math.max(0, avgFogProbability)),
+            sunrise: `${sunriseTime.hour.toString().padStart(2, "0")}:${sunriseTime.minute.toString().padStart(2, "0")}`,
+          });
+        }
+
+        return forecasts;
+      } catch (error) {
+        console.error("Error fetching multi-day forecast:", error);
+        if (error instanceof Error) {
+          throw new Error(`无法获取多日预报数据: ${error.message}`);
+        }
+        throw new Error("无法获取多日预报数据");
+      }
+    }),
+
   // 获取详细的小时级气象数据
   getHourlyWeather: publicProcedure
     .input(

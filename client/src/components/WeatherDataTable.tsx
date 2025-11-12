@@ -67,7 +67,9 @@ export default function WeatherDataTable({ data }: WeatherDataTableProps) {
                     }`}
                   >
                     <td className="py-3 px-4 font-semibold">
-                      {format(new Date(item.time), "HH:mm")}
+                      {item.time && typeof item.time === 'object' && 'hour' in item.time
+                        ? `${String(item.time.hour).padStart(2, '0')}:${String(item.time.minute).padStart(2, '0')}`
+                        : format(new Date(item.time), "HH:mm")}
                     </td>
                     <td className="text-center py-3 px-4 text-lg">
                       {getWeatherIcon(item.weatherCode)}

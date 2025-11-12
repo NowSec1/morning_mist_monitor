@@ -290,7 +290,7 @@ const weatherRouter = router({
           cloudLayerData,
           cloudTrend,
           hourlyWeatherData: hourlyWeatherData.map((data, index) => ({
-            time: new Date(hourlyWeatherTimes[index]),
+            time: { hour: new Date(hourlyWeatherTimes[index]).getHours(), minute: new Date(hourlyWeatherTimes[index]).getMinutes() },
             ...data,
             weatherDescription: OpenMeteoAdapter.getWeatherDescription(data.weatherCode),
           })),

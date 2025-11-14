@@ -157,6 +157,7 @@ export interface WeatherData {
   lowCloudCover: number; // 低云层覆盖率（%）
   midCloudCover: number; // 中云层覆盖率（%）
   highCloudCover: number; // 高云层覆盖率（%）
+  tempDewPointGap?: number; // 温度-露点差（°C）
 }
 
 export interface FogProbability {

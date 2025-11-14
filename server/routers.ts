@@ -198,6 +198,7 @@ const weatherRouter = router({
               lowCloudCover: hourlyData.cloud_cover_low[i] || 0,
               midCloudCover: hourlyData.cloud_cover_mid[i] || 0,
               highCloudCover: hourlyData.cloud_cover_high[i] || 0,
+              tempDewPointGap: (hourlyData.temperature_2m[i] ?? 0) - (hourlyData.dew_point_2m[i] ?? 0),
             };
             hourlyWeatherData.push(weatherData);
             hourlyWeatherTimes.push(timeStr);
@@ -219,6 +220,7 @@ const weatherRouter = router({
               lowCloudCover: hourlyData.cloud_cover_low[i] || 0,
               midCloudCover: hourlyData.cloud_cover_mid[i] || 0,
               highCloudCover: hourlyData.cloud_cover_high[i] || 0,
+              tempDewPointGap: (hourlyData.temperature_2m[i] ?? 0) - (hourlyData.dew_point_2m[i] ?? 0),
             };
             hourlyWeatherData.push(weatherData);
             hourlyWeatherTimes.push(hourlyData.time[i]);
@@ -247,6 +249,7 @@ const weatherRouter = router({
             lowCloudCover: hourlyData.cloud_cover_low?.[0] ?? 0,
             midCloudCover: hourlyData.cloud_cover_mid?.[0] ?? 0,
             highCloudCover: hourlyData.cloud_cover_high?.[0] ?? 0,
+            tempDewPointGap: (temperature ?? 0) - (dewPoint ?? 0),
           };
           console.log("Fallback weather data:", firstWeather);
           hourlyWeatherData.push(firstWeather);

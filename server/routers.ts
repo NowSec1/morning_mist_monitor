@@ -25,6 +25,8 @@ import {
   type WeatherData,
 } from "@shared/algorithms";
 import { SunriseSunsetAPI } from "@shared/sunriseSunsetAPI";
+import { sendNotifications } from "./notificationService";
+import { notificationsRouter } from "./notificationRouter";
 
 /**
  * 地点管理路由
@@ -284,6 +286,10 @@ const weatherRouter = router({
         }));
 
         const cloudTrend = CloudLayerProcessor.analyzeTrend(cloudTrends);
+
+        // 如果用户已登录且概率超过80%，发送通知
+        // 注意：这里是publicProcedure，所以ctx.user可能为null
+        // 通知应该在前端调用专门的API时发送
 
         return {
           sunriseTime,
@@ -648,7 +654,9 @@ export const appRouter = router({
   locations: locationsRouter,
   weather: weatherRouter,
   algorithm: algorithmRouter,
+  notifications: notificationsRouter,
 });
 
 export type AppRouter = typeof appRouter;
+
 

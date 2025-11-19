@@ -15,6 +15,13 @@
       "when": 1761201112580,
       "tag": "0001_overjoyed_lady_mastermind",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1763347037149,
+      "tag": "0002_steady_switch",
+      "breakpoints": true
     }
   ]
 }

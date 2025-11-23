@@ -1,6 +1,7 @@
 import { getDb } from "./db";
 import { notificationConfigs, notificationHistory, InsertNotificationHistory } from "../drizzle/schema";
 import { eq, and } from "drizzle-orm";
+import { createHmac } from "crypto";
 
 /**
  * 通知服务模块
@@ -25,19 +26,38 @@ interface NotificationPayload {
 
 /**
  * 发送钉钉群机器人通知
+ * 支持加签认证
  */
 async function sendDingTalkNotification(
   webhookUrl: string,
-  payload: NotificationPayload
-): Promise<{ success: boolean; error?: string }> {
+  payload: NotificationPayload,
+  secret?: string
+): Promise<{ success: boolean; error?: string; details?: string }> {
   try {
     const message = formatDingTalkMessage(payload);
     
-    const response = await fetch(webhookUrl, {
+    let url = webhookUrl;
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    
+    // 处理加签
+    if (secret) {
+      const timestamp = Date.now();
+      const stringToSign = `${timestamp}\n${secret}`;
+      
+      const hmac = createHmac("sha256", secret);
+      hmac.update(stringToSign);
+      const sign = hmac.digest("base64");
+      
+      // 将签名和timestamp添加到URL
+      const separator = webhookUrl.includes("?") ? "&" : "?";
+      url = `${webhookUrl}${separator}timestamp=${timestamp}&sign=${encodeURIComponent(sign)}`;
+    }
+    
+    const response = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify({
         msgtype: "markdown",
         markdown: {
@@ -49,17 +69,30 @@ async function sendDingTalkNotification(
 
     if (!response.ok) {
       const error = await response.text();
-      return { success: false, error: `HTTP ${response.status}: ${error}` };
+      return { 
+        success: false, 
+        error: `HTTP ${response.status}`,
+        details: `HTTP错误: ${response.status}\n响应: ${error}`
+      };
     }
 
     const result = await response.json();
     if (result.errcode !== 0) {
-      return { success: false, error: `钉钉错误: ${result.errmsg}` };
+      return { 
+        success: false, 
+        error: `钉钉错误: ${result.errmsg}`,
+        details: `钉钉API返回错误\n错误码: ${result.errcode}\n错误信息: ${result.errmsg}`
+      };
     }
 
     return { success: true };
   } catch (error) {
-    return { success: false, error: String(error) };
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    return { 
+      success: false, 
+      error: `网络错误: ${errorMsg}`,
+      details: `发送钉钉通知时出错\n错误: ${errorMsg}`
+    };
   }
 }
 
@@ -69,7 +102,7 @@ async function sendDingTalkNotification(
 async function sendPushDeerNotification(
   pushKey: string,
   payload: NotificationPayload
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; details?: string }> {
   try {
     const message = formatPushDeerMessage(payload);
     
@@ -88,17 +121,30 @@ async function sendPushDeerNotification(
 
     if (!response.ok) {
       const error = await response.text();
-      return { success: false, error: `HTTP ${response.status}: ${error}` };
+      return { 
+        success: false, 
+        error: `HTTP ${response.status}`,
+        details: `HTTP错误: ${response.status}\n响应: ${error}`
+      };
     }
 
     const result = await response.json();
     if (result.code !== 0) {
-      return { success: false, error: `PushDeer错误: ${result.msg}` };
+      return { 
+        success: false, 
+        error: `PushDeer错误: ${result.msg}`,
+        details: `PushDeer API返回错误\n错误码: ${result.code}\n错误信息: ${result.msg}\n\n诊断建议:\n1. 检查pushkey是否正确\n2. 检查PushDeer账户是否有效\n3. 检查网络连接`
+      };
     }
 
     return { success: true };
   } catch (error) {
-    return { success: false, error: String(error) };
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    return { 
+      success: false, 
+      error: `网络错误: ${errorMsg}`,
+      details: `发送PushDeer通知时出错\n错误: ${errorMsg}\n\n诊断建议:\n1. 检查网络连接\n2. 检查PushDeer服务是否可用\n3. 检查pushkey格式是否正确`
+    };
   }
 }
 
@@ -189,6 +235,7 @@ function shouldSendNotification(
 
 /**
  * 发送通知并记录历史
+ * @returns 返回每个配置的发送结果
  */
 export async function sendNotifications(
   userId: number,
@@ -196,11 +243,13 @@ export async function sendNotifications(
   locationName: string,
   fogProbability: number,
   payload: NotificationPayload
-): Promise<void> {
+): Promise<Array<{ configId: number; type: string; success: boolean; error?: string; details?: string }>> {
   const db = await getDb();
+  const results: Array<{ configId: number; type: string; success: boolean; error?: string; details?: string }> = [];
+  
   if (!db) {
     console.warn("[Notification] Database not available");
-    return;
+    return results;
   }
 
   try {
@@ -219,19 +268,31 @@ export async function sendNotifications(
     for (const config of configs) {
       // 检查是否应该发送通知
       if (!shouldSendNotification(config, fogProbability, config.lastNotifiedAt)) {
+        results.push({
+          configId: config.id,
+          type: config.type,
+          success: false,
+          error: "不符合发送条件",
+          details: "根据频率控制或阈值设置，此次不需要发送通知"
+        });
         continue;
       }
 
-      let result: { success: boolean; error?: string };
-
+      let result: { success: boolean; error?: string; details?: string };
       // 根据通知类型选择发送方式
       if (config.type === "dingtalk") {
-        result = await sendDingTalkNotification(config.channelId, payload);
+        result = await sendDingTalkNotification(config.channelId, payload, config.secret || undefined);
       } else if (config.type === "pushdeer") {
         result = await sendPushDeerNotification(config.channelId, payload);
       } else {
         result = { success: false, error: "Unknown notification type" };
       }
+
+      results.push({
+        configId: config.id,
+        type: config.type,
+        ...result
+      });
 
       // 记录通知历史
       const historyRecord: InsertNotificationHistory = {
@@ -242,7 +303,7 @@ export async function sendNotifications(
         fogProbability,
         message: payload.locationName + " - 晨雾概率 " + fogProbability + "%",
         status: result.success ? "success" : "failed",
-        errorMessage: result.error,
+        errorMessage: result.details || result.error,
       };
 
       await db.insert(notificationHistory).values(historyRecord);
@@ -263,6 +324,8 @@ export async function sendNotifications(
   } catch (error) {
     console.error("[Notification] Error sending notifications:", error);
   }
+  
+  return results;
 }
 
 /**
@@ -333,7 +396,8 @@ export async function addNotificationConfig(
   channelId: string,
   name: string,
   threshold: number = 80,
-  frequency: "daily" | "always" = "daily"
+  frequency: "daily" | "always" = "daily",
+  secret?: string
 ) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -346,6 +410,7 @@ export async function addNotificationConfig(
     name,
     threshold,
     frequency,
+    secret,
     enabled: 1,
   });
 
@@ -362,6 +427,7 @@ export async function updateNotificationConfig(
     threshold: number;
     enabled: number;
     frequency: "daily" | "always";
+    secret?: string | null;
   }>
 ) {
   const db = await getDb();

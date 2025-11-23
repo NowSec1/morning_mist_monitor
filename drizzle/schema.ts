@@ -124,6 +124,8 @@ export const notificationConfigs = mysqlTable("notification_configs", {
   enabled: int("enabled").default(1).notNull(),
   // 通知频率控制：daily（每天最多一次）、always（每次都通知）
   frequency: mysqlEnum("frequency", ["daily", "always"]).default("daily").notNull(),
+  // 钉钉加签的secret（可选）
+  secret: text("secret"),
   // 最后一次发送通知的时间（用于频率控制）
   lastNotifiedAt: timestamp("lastNotifiedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

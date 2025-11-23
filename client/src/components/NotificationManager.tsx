@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trash2, Plus, Bell, CheckCircle, AlertCircle } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Trash2, Plus, Bell, CheckCircle, AlertCircle, Copy } from "lucide-react";
 import { toast } from "sonner";
 
 interface NotificationManagerProps {
@@ -15,14 +16,22 @@ interface NotificationManagerProps {
   locationName: string;
 }
 
+interface TestResult {
+  success: boolean;
+  error?: string;
+  details?: string;
+}
+
 export default function NotificationManager({ locationId, locationName }: NotificationManagerProps) {
   const [open, setOpen] = useState(false);
+  const [testResult, setTestResult] = useState<TestResult | null>(null);
   const [formData, setFormData] = useState({
     type: "dingtalk" as "dingtalk" | "pushdeer",
     channelId: "",
     name: "",
     threshold: 80,
     frequency: "daily" as "daily" | "always",
+    secret: "",
   });
 
   const utils = trpc.useUtils();
@@ -50,7 +59,9 @@ export default function NotificationManager({ locationId, locationName }: Notifi
         name: "",
         threshold: 80,
         frequency: "daily",
+        secret: "",
       });
+      setTestResult(null);
     },
     onError: (error) => {
       toast.error(error.message || "添加配置失败");
@@ -81,9 +92,12 @@ export default function NotificationManager({ locationId, locationName }: Notifi
 
   // 手动触发通知（测试）
   const triggerMutation = trpc.notifications.triggerNotification.useMutation({
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       toast.success("测试通知已发送");
       utils.notifications.getHistory.invalidate();
+      if (data && data.result) {
+        setTestResult(data.result);
+      }
     },
     onError: (error) => {
       toast.error(error.message || "发送通知失败");
@@ -107,6 +121,7 @@ export default function NotificationManager({ locationId, locationName }: Notifi
       name: formData.name,
       threshold: formData.threshold,
       frequency: formData.frequency,
+      secret: formData.secret || undefined,
     });
   };
 
@@ -124,6 +139,7 @@ export default function NotificationManager({ locationId, locationName }: Notifi
   };
 
   const handleTestNotification = () => {
+    setTestResult(null);
     triggerMutation.mutate({
       locationId,
       locationName,
@@ -134,6 +150,11 @@ export default function NotificationManager({ locationId, locationName }: Notifi
       goldenHourStart: "06:20",
       goldenHourEnd: "07:30",
     });
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success("已复制到剪贴板");
   };
 
   return (
@@ -154,7 +175,7 @@ export default function NotificationManager({ locationId, locationName }: Notifi
                   添加通知
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>添加通知配置</DialogTitle>
                 </DialogHeader>
@@ -196,6 +217,23 @@ export default function NotificationManager({ locationId, locationName }: Notifi
                       }
                     />
                   </div>
+
+                  {formData.type === "dingtalk" && (
+                    <div>
+                      <Label>加签Secret（可选）</Label>
+                      <Input
+                        type="password"
+                        placeholder="如果启用了加签，请输入secret"
+                        value={formData.secret}
+                        onChange={(e) =>
+                          setFormData({ ...formData, secret: e.target.value })
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        钉钉群机器人安全设置中的加签secret，用于HMAC-SHA256签名认证
+                      </p>
+                    </div>
+                  )}
 
                   <div>
                     <Label>通知名称</Label>
@@ -242,13 +280,61 @@ export default function NotificationManager({ locationId, locationName }: Notifi
                     </Select>
                   </div>
 
-                  <Button
-                    onClick={handleAddConfig}
-                    disabled={addConfigMutation.isPending}
-                    className="w-full"
-                  >
-                    {addConfigMutation.isPending ? "添加中..." : "添加配置"}
-                  </Button>
+                  {testResult && (
+                    <Card className={`p-4 ${testResult.success ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}`}>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          {testResult.success ? (
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                          ) : (
+                            <AlertCircle className="w-5 h-5 text-red-600" />
+                          )}
+                          <span className={testResult.success ? "text-green-800 font-semibold" : "text-red-800 font-semibold"}>
+                            {testResult.success ? "测试成功" : "测试失败"}
+                          </span>
+                        </div>
+                        {testResult.error && (
+                          <p className={`text-sm ${testResult.success ? "text-green-700" : "text-red-700"}`}>
+                            {testResult.error}
+                          </p>
+                        )}
+                        {testResult.details && (
+                          <div className="mt-2 p-2 bg-white rounded border border-gray-200">
+                            <p className="text-xs font-mono whitespace-pre-wrap break-words text-gray-700">
+                              {testResult.details}
+                            </p>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="mt-2 gap-1"
+                              onClick={() => copyToClipboard(testResult.details || "")}
+                            >
+                              <Copy className="w-3 h-3" />
+                              复制错误信息
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  )}
+
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleTestNotification}
+                      disabled={triggerMutation.isPending || !formData.channelId}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      {triggerMutation.isPending ? "测试中..." : "测试配置"}
+                    </Button>
+                    <Button
+                      onClick={handleAddConfig}
+                      disabled={addConfigMutation.isPending}
+                      className="flex-1"
+                    >
+                      {addConfigMutation.isPending ? "添加中..." : "添加配置"}
+                    </Button>
+                  </div>
                 </div>
               </DialogContent>
             </Dialog>
@@ -279,6 +365,11 @@ export default function NotificationManager({ locationId, locationName }: Notifi
                       <p className="text-xs text-muted-foreground mt-1 truncate">
                         {config.channelId}
                       </p>
+                      {config.secret && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          ✓ 已配置加签认证
+                        </p>
+                      )}
                     </div>
                     <div className="flex gap-2">
                       <Button
@@ -305,17 +396,6 @@ export default function NotificationManager({ locationId, locationName }: Notifi
               <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <p>还没有配置任何通知</p>
             </div>
-          )}
-
-          {configs && configs.length > 0 && (
-            <Button
-              onClick={handleTestNotification}
-              disabled={triggerMutation.isPending}
-              variant="outline"
-              className="w-full"
-            >
-              {triggerMutation.isPending ? "发送中..." : "发送测试通知"}
-            </Button>
           )}
         </TabsContent>
 
@@ -346,7 +426,20 @@ export default function NotificationManager({ locationId, locationName }: Notifi
                         {new Date(record.createdAt).toLocaleString("zh-CN")}
                       </p>
                       {record.errorMessage && (
-                        <p className="text-xs text-red-600 mt-1">{record.errorMessage}</p>
+                        <div className="mt-2 p-2 bg-gray-100 rounded">
+                          <p className="text-xs font-mono whitespace-pre-wrap break-words text-gray-700">
+                            {record.errorMessage}
+                          </p>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="mt-1 gap-1"
+                            onClick={() => copyToClipboard(record.errorMessage)}
+                          >
+                            <Copy className="w-3 h-3" />
+                            复制
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </div>

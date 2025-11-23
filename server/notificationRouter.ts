@@ -20,6 +20,7 @@ export const notificationsRouter = router({
         name: z.string().min(1, "通知名称不能为空"),
         threshold: z.number().int().min(0).max(100).default(80),
         frequency: z.enum(["daily", "always"]).default("daily"),
+        secret: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -30,7 +31,8 @@ export const notificationsRouter = router({
         input.channelId,
         input.name,
         input.threshold,
-        input.frequency
+        input.frequency,
+        input.secret
       );
     }),
 
@@ -114,14 +116,30 @@ export const notificationsRouter = router({
           tempTrend: "温度下降",
         },
       };
-      await sendNotifications(
+      const results = await sendNotifications(
         ctx.user.id,
         input.locationId,
         input.locationName,
         input.fogProbability,
         payload
       );
-      return { success: true };
+      
+      // 返回第一个配置的结果作为测试结果
+      if (results.length > 0) {
+        return { 
+          success: true,
+          result: results[0]
+        };
+      }
+      
+      return { 
+        success: false,
+        result: {
+          success: false,
+          error: "没有可用的通知配置",
+          details: "此地点没有配置任何启用的通知渠道"
+        }
+      };
     }),
 });
 

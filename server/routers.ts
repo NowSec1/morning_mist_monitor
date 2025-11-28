@@ -26,7 +26,7 @@ import {
 } from "@shared/algorithms";
 import { SunriseSunsetAPI } from "@shared/sunriseSunsetAPI";
 import { sendNotifications } from "./notificationService";
-import { notificationsRouter } from "./notificationRouter";
+import { notificationRouter } from "./notificationRouter";
 
 /**
  * 地点管理路由
@@ -654,7 +654,7 @@ export const appRouter = router({
   locations: locationsRouter,
   weather: weatherRouter,
   algorithm: algorithmRouter,
-  notifications: notificationsRouter,
+  notifications: notificationRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -203,3 +203,15 @@
 - [x] 显示错误信息和诊断建议
 - [x] 实时推送状态反馈
 - [x] 支持查看推送日志详情
+
+
+
+## Bug修复（v1.4.2）
+
+### PushDeer推送问题
+- [x] 修复PushDeer推送类型选择bug - 选择PushDeer时仍发送钉钉格式请求
+- [x] 验证NotificationManager中的pushType状态管理
+- [x] 确保后端路由正确识别推送类型
+- [x] 测试PushDeer推送功能（所有测试通过）
+
+

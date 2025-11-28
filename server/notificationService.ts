@@ -242,7 +242,8 @@ export async function sendNotifications(
   locationId: number,
   locationName: string,
   fogProbability: number,
-  payload: NotificationPayload
+  payload: NotificationPayload,
+  testConfig?: { type: "dingtalk" | "pushdeer"; channelId: string; secret?: string }
 ): Promise<Array<{ configId: number; type: string; success: boolean; error?: string; details?: string }>> {
   const db = await getDb();
   const results: Array<{ configId: number; type: string; success: boolean; error?: string; details?: string }> = [];
@@ -253,6 +254,28 @@ export async function sendNotifications(
   }
 
   try {
+    // 如果提供了测试配置，则只测试该配置
+    if (testConfig) {
+      console.log("[Notification] Testing config:", testConfig);
+      let result: { success: boolean; error?: string; details?: string };
+      // 根据通知类型选择发送方式
+      if (testConfig.type === "dingtalk") {
+        result = await sendDingTalkNotification(testConfig.channelId, payload, testConfig.secret || undefined);
+      } else if (testConfig.type === "pushdeer") {
+        result = await sendPushDeerNotification(testConfig.channelId, payload);
+      } else {
+        result = { success: false, error: "Unknown notification type" };
+      }
+      
+      results.push({
+        configId: 0,
+        type: testConfig.type,
+        ...result
+      });
+      
+      return results;
+    }
+    
     // 获取该地点的所有启用的通知配置
     const configs = await db
       .select()

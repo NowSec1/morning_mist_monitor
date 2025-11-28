@@ -1,92 +1,162 @@
-import { router, protectedProcedure } from "./_core/trpc";
+import { protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
-import {
-  addNotificationConfig,
-  updateNotificationConfig,
-  deleteNotificationConfig,
-  getNotificationConfigs,
-  getNotificationHistory,
-  sendNotifications,
-} from "./notificationService";
+import { sendNotifications } from "./notificationService";
+import { getDb } from "./db";
 
-export const notificationsRouter = router({
-  // 添加通知配置
+export const notificationRouter = router({
   addConfig: protectedProcedure
     .input(
       z.object({
         locationId: z.number(),
         type: z.enum(["dingtalk", "pushdeer"]),
-        channelId: z.string().min(1, "通知渠道标识不能为空"),
-        name: z.string().min(1, "通知名称不能为空"),
-        threshold: z.number().int().min(0).max(100).default(80),
-        frequency: z.enum(["daily", "always"]).default("daily"),
+        channelId: z.string(),
         secret: z.string().optional(),
+        name: z.string(),
+        threshold: z.number().int().min(0).max(100),
+        frequency: z.enum(["daily", "always"]),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      return await addNotificationConfig(
-        ctx.user.id,
-        input.locationId,
-        input.type,
-        input.channelId,
-        input.name,
-        input.threshold,
-        input.frequency,
-        input.secret
-      );
+      const db = await getDb();
+      if (!db) {
+        throw new Error("Database not available");
+      }
+
+      const result = await db.insert(require("../drizzle/schema").notificationConfigs).values({
+        userId: ctx.user.id,
+        locationId: input.locationId,
+        type: input.type,
+        channelId: input.channelId,
+        secret: input.secret,
+        name: input.name,
+        threshold: input.threshold,
+        frequency: input.frequency,
+        enabled: true,
+      });
+
+      return { success: true };
     }),
 
-  // 获取通知配置列表
-  getConfigs: protectedProcedure
-    .input(
-      z.object({
-        locationId: z.number().optional(),
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      return await getNotificationConfigs(ctx.user.id, input.locationId);
-    }),
-
-  // 更新通知配置
   updateConfig: protectedProcedure
     .input(
       z.object({
         configId: z.number(),
         name: z.string().optional(),
         threshold: z.number().int().min(0).max(100).optional(),
-        enabled: z.number().optional(),
         frequency: z.enum(["daily", "always"]).optional(),
+        enabled: z.boolean().optional(),
       })
     )
-    .mutation(async ({ input }) => {
-      return await updateNotificationConfig(input.configId, {
-        name: input.name,
-        threshold: input.threshold,
-        enabled: input.enabled,
-        frequency: input.frequency,
-      });
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) {
+        throw new Error("Database not available");
+      }
+
+      const updateData: Record<string, any> = {};
+      if (input.name !== undefined) updateData.name = input.name;
+      if (input.threshold !== undefined) updateData.threshold = input.threshold;
+      if (input.frequency !== undefined) updateData.frequency = input.frequency;
+      if (input.enabled !== undefined) updateData.enabled = input.enabled;
+
+      await db
+        .update(require("../drizzle/schema").notificationConfigs)
+        .set(updateData)
+        .where(
+          require("drizzle-orm").and(
+            require("drizzle-orm").eq(require("../drizzle/schema").notificationConfigs.id, input.configId),
+            require("drizzle-orm").eq(require("../drizzle/schema").notificationConfigs.userId, ctx.user.id)
+          )
+        );
+
+      return { success: true };
     }),
 
-  // 删除通知配置
   deleteConfig: protectedProcedure
     .input(z.object({ configId: z.number() }))
-    .mutation(async ({ input }) => {
-      return await deleteNotificationConfig(input.configId);
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) {
+        throw new Error("Database not available");
+      }
+
+      await db
+        .delete(require("../drizzle/schema").notificationConfigs)
+        .where(
+          require("drizzle-orm").and(
+            require("drizzle-orm").eq(require("../drizzle/schema").notificationConfigs.id, input.configId),
+            require("drizzle-orm").eq(require("../drizzle/schema").notificationConfigs.userId, ctx.user.id)
+          )
+        );
+
+      return { success: true };
     }),
 
-  // 获取通知历史
-  getHistory: protectedProcedure
-    .input(
-      z.object({
-        locationId: z.number().optional(),
-        limit: z.number().int().min(1).max(100).default(20),
-      })
-    )
+  toggleConfig: protectedProcedure
+    .input(z.object({ configId: z.number(), enabled: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) {
+        throw new Error("Database not available");
+      }
+
+      await db
+        .update(require("../drizzle/schema").notificationConfigs)
+        .set({ enabled: input.enabled })
+        .where(
+          require("drizzle-orm").and(
+            require("drizzle-orm").eq(require("../drizzle/schema").notificationConfigs.id, input.configId),
+            require("drizzle-orm").eq(require("../drizzle/schema").notificationConfigs.userId, ctx.user.id)
+          )
+        );
+
+      return { success: true };
+    }),
+
+  getConfigs: protectedProcedure
+    .input(z.object({ locationId: z.number() }))
     .query(async ({ ctx, input }) => {
-      return await getNotificationHistory(ctx.user.id, input.locationId, input.limit);
+      const db = await getDb();
+      if (!db) {
+        return [];
+      }
+
+      const configs = await db
+        .select()
+        .from(require("../drizzle/schema").notificationConfigs)
+        .where(
+          require("drizzle-orm").and(
+            require("drizzle-orm").eq(require("../drizzle/schema").notificationConfigs.userId, ctx.user.id),
+            require("drizzle-orm").eq(require("../drizzle/schema").notificationConfigs.locationId, input.locationId)
+          )
+        );
+
+      return configs;
     }),
 
-  // 手动触发通知（用于测试）
+  getHistory: protectedProcedure
+    .input(z.object({ locationId: z.number(), limit: z.number().default(10) }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) {
+        return [];
+      }
+
+      const history = await db
+        .select()
+        .from(require("../drizzle/schema").notificationHistory)
+        .where(
+          require("drizzle-orm").and(
+            require("drizzle-orm").eq(require("../drizzle/schema").notificationHistory.userId, ctx.user.id),
+            require("drizzle-orm").eq(require("../drizzle/schema").notificationHistory.locationId, input.locationId)
+          )
+        )
+        .orderBy(require("drizzle-orm").desc(require("../drizzle/schema").notificationHistory.createdAt))
+        .limit(input.limit);
+
+      return history;
+    }),
+
   triggerNotification: protectedProcedure
     .input(
       z.object({
@@ -98,6 +168,9 @@ export const notificationsRouter = router({
         blueHourEnd: z.string(),
         goldenHourStart: z.string(),
         goldenHourEnd: z.string(),
+        type: z.enum(["dingtalk", "pushdeer"]),
+        channelId: z.string(),
+        secret: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -116,29 +189,39 @@ export const notificationsRouter = router({
           tempTrend: "温度下降",
         },
       };
+
+      console.log("[triggerNotification] input:", { type: input.type, channelId: input.channelId, secret: input.secret });
+      
+      const testConfig = {
+        type: input.type as "dingtalk" | "pushdeer",
+        channelId: input.channelId,
+        secret: input.secret,
+      };
+      
+      console.log("[triggerNotification] testConfig:", testConfig);
+      
       const results = await sendNotifications(
         ctx.user.id,
         input.locationId,
         input.locationName,
         input.fogProbability,
-        payload
+        payload,
+        testConfig
       );
-      
-      // 返回第一个配置的结果作为测试结果
+
       if (results.length > 0) {
-        return { 
+        return {
           success: true,
-          result: results[0]
+          result: results[0],
         };
       }
-      
-      return { 
+
+      return {
         success: false,
         result: {
           success: false,
           error: "没有可用的通知配置",
-          details: "此地点没有配置任何启用的通知渠道"
-        }
+        },
       };
     }),
 });

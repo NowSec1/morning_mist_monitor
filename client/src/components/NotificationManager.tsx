@@ -128,7 +128,7 @@ export default function NotificationManager({ locationId, locationName }: Notifi
   const handleToggleConfig = (config: any) => {
     updateConfigMutation.mutate({
       configId: config.id,
-      enabled: config.enabled ? 0 : 1,
+      enabled: !config.enabled,
     });
   };
 
@@ -137,8 +137,8 @@ export default function NotificationManager({ locationId, locationName }: Notifi
       deleteConfigMutation.mutate({ configId });
     }
   };
-
   const handleTestNotification = () => {
+    console.log("[Test] formData:", formData);
     setTestResult(null);
     triggerMutation.mutate({
       locationId,
@@ -149,6 +149,9 @@ export default function NotificationManager({ locationId, locationName }: Notifi
       blueHourEnd: "06:50",
       goldenHourStart: "06:20",
       goldenHourEnd: "07:30",
+      type: formData.type,
+      channelId: formData.channelId,
+      secret: formData.secret,
     });
   };
 

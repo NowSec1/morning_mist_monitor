@@ -13,8 +13,7 @@ import CloudLayerVisualization from "@/components/CloudLayerVisualization";
 import AlgorithmExplanation from "@/components/AlgorithmExplanation";
 import WeatherAlert from "@/components/WeatherAlert";
 import MultiDayForecast from "@/components/MultiDayForecast";
-import NotificationManager from "@/components/NotificationManager";
-import { Cloud, MapPin, Info, Settings, Calendar, Bell } from "lucide-react";
+import { Cloud, MapPin, Info, Settings, Calendar } from "lucide-react";
 
 export default function Home() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -179,12 +178,11 @@ export default function Home() {
         )}
 
         <Tabs defaultValue="prediction" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="prediction">晨雾预测</TabsTrigger>
             <TabsTrigger value="forecast">多日预报</TabsTrigger>
             <TabsTrigger value="weather">气象数据</TabsTrigger>
             <TabsTrigger value="cloud">云层分析</TabsTrigger>
-            <TabsTrigger value="notifications">预警通知</TabsTrigger>
             <TabsTrigger value="algorithm">算法说明</TabsTrigger>
           </TabsList>
 
@@ -277,20 +275,6 @@ export default function Home() {
               <Card className="border-dashed">
                 <CardContent className="pt-6 text-center text-slate-500 dark:text-slate-400">
                   <p>请先选择地点并获取预测数据</p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          {/* 预警通知标签页 */}
-          <TabsContent value="notifications" className="space-y-6">
-            {selectedLocation ? (
-              <NotificationManager locationId={selectedLocation.id} locationName={selectedLocation.name} />
-            ) : (
-              <Card className="border-dashed">
-                <CardContent className="pt-6 text-center text-slate-500 dark:text-slate-400">
-                  <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                  <p>请先选择地点配置通知</p>
                 </CardContent>
               </Card>
             )}

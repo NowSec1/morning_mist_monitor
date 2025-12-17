@@ -215,3 +215,18 @@
 - [x] 测试PushDeer推送功能（所有测试通过）
 
 
+
+
+## 移除预警通知模块（v1.5.0）
+
+- [x] 删除数据库schema中的notificationConfigs和notificationHistory表
+- [x] 删除server/notificationService.ts
+- [x] 删除server/notificationRouter.ts
+- [x] 删除server/notificationService.test.ts
+- [x] 删除server/notificationRouter.test.ts
+- [x] 删除client/src/components/NotificationManager.tsx
+- [x] 从 server/routers.ts中移除通知路由导入和注册
+- [x] 从 client/src/pages/Home.tsx中移除预警通知标签页
+- [x] 运行测试验证系统完整性
+- [x] 保存最终版本
+

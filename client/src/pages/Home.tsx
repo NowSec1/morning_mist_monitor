@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +13,8 @@ import AlgorithmExplanation from "@/components/AlgorithmExplanation";
 import WeatherAlert from "@/components/WeatherAlert";
 import MultiDayForecast from "@/components/MultiDayForecast";
 import { Cloud, MapPin, Info, Settings, Calendar } from "lucide-react";
+import LoginDialog from "@/components/LoginDialog";
+import { useState, useEffect } from "react";
 
 export default function Home() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -84,15 +85,22 @@ export default function Home() {
 
         {/* Main Content */}
         <main className="flex-1 container mx-auto px-4 py-16 flex flex-col items-center justify-center">
-          <div className="max-w-2xl text-center space-y-8 animate-slide-up">
-            <div>
-              <h2 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
-                晨雾监测系统
-              </h2>
-              <p className="text-xl text-slate-600 dark:text-slate-300 mb-8">
-                基于实时气象数据，精确预测晨雾和平流雾的发生概率，为摄影爱好者提供最佳拍摄时刻建议
-              </p>
+          <div className="max-w-4xl space-y-8">
+            {/* 登录组件 */}
+            <div className="flex justify-center">
+              <LoginDialog />
             </div>
+
+            {/* 介绍信息 */}
+            <div className="text-center space-y-8 animate-slide-up">
+              <div>
+                <h2 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
+                  晨雾监测系统
+                </h2>
+                <p className="text-xl text-slate-600 dark:text-slate-300 mb-8">
+                  基于实时气象数据，精确预测晨雾和平流雾的发生概率，为摄影爱好者提供最佳拍摄时刻建议
+                </p>
+              </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-12">
               <Card className="glass">
@@ -125,14 +133,7 @@ export default function Home() {
                 </CardContent>
               </Card>
             </div>
-
-            <Button
-              size="lg"
-              onClick={() => (window.location.href = getLoginUrl())}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg"
-            >
-              立即开始
-            </Button>
+            </div>
           </div>
         </main>
 

@@ -36,6 +36,13 @@
       "when": 1765965013711,
       "tag": "0004_cold_lizard",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1768487808603,
+      "tag": "0005_funny_shatterstar",
+      "breakpoints": true
     }
   ]
 }

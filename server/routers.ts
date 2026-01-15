@@ -1,4 +1,5 @@
-import { COOKIE_NAME } from "@shared/const";
+import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
+import { sdk } from "./_core/sdk";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
@@ -25,6 +26,7 @@ import {
   type WeatherData,
 } from "@shared/algorithms";
 import { SunriseSunsetAPI } from "@shared/sunriseSunsetAPI";
+import { registerLocalUser, loginLocalUser } from "./auth";
 
 /**
  * 地点管理路由
@@ -647,6 +649,40 @@ export const appRouter = router({
         success: true,
       } as const;
     }),
+    // 本地用户注册
+    registerLocal: publicProcedure
+      .input(
+        z.object({
+          username: z.string().min(3, "用户名至少3个字符").max(64, "用户名最多64个字符"),
+          password: z.string().min(6, "密码至少6个字符"),
+          email: z.string().email("邮箱格式不正确").optional(),
+          name: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        return registerLocalUser(input.username, input.password, input.email, input.name);
+      }),
+    // 本地用户登录
+    loginLocal: publicProcedure
+      .input(
+        z.object({
+          username: z.string(),
+          password: z.string(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const result = await loginLocalUser(input.username, input.password);
+        if (result.success && result.userId) {
+          // 创建会话token
+          const sessionToken = await sdk.createSessionToken(result.userId.toString(), {
+            name: result.user?.name || result.user?.username || "",
+            expiresInMs: ONE_YEAR_MS,
+          });
+          const cookieOptions = getSessionCookieOptions(ctx.req);
+          ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+        }
+        return result;
+      }),
   }),
 
   locations: locationsRouter,

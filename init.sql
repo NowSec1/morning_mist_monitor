@@ -8,15 +8,21 @@ USE morning_mist;
 -- 用户表
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  openId VARCHAR(64) NOT NULL UNIQUE,
+  openId VARCHAR(64) UNIQUE,
+  username VARCHAR(64) UNIQUE,
+  password TEXT,
   name TEXT,
   email VARCHAR(320),
+  authType ENUM('local', 'manus') NOT NULL,
   loginMethod VARCHAR(64),
   role ENUM('user', 'admin') DEFAULT 'user' NOT NULL,
+  isActive BOOLEAN DEFAULT true NOT NULL,
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
   lastSignedIn TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
   INDEX idx_openId (openId),
+  INDEX idx_username (username),
+  INDEX idx_authType (authType),
   INDEX idx_role (role),
   INDEX idx_createdAt (createdAt)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

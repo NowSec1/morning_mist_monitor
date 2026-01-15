@@ -243,3 +243,54 @@
 - [x] 创建 start.bat 启动脚本（Windows）
 - [x] 创建 DOCKER_QUICKSTART.md 快速启动指南
 
+
+
+## 用户认证系统改造（v1.7.0）
+
+### 数据库改造
+- [x] 扩展users表支持本地用户字段（username, password, authType, isActive）
+- [x] 扩展users表支持Manus SSO字段（openId可为null）
+- [x] 生成数据库迁移文件（0005_funny_shatterstar.sql）
+- [x] 更新init.sql以支持新的表结构
+
+### 后端实现
+- [x] 安装bcrypt密码加密库
+- [x] 创建server/auth.ts认证模块
+- [x] 实现hashPassword和verifyPassword函数
+- [x] 实现registerLocalUser本地用户注册
+- [x] 实现loginLocalUser本地用户登录
+- [x] 实现getUserById用户查询
+- [x] 扩展server/db.ts中的数据库操作函数
+- [x] 在server/routers.ts中添加auth.registerLocal路由
+- [x] 在server/routers.ts中添加auth.loginLocal路由
+- [x] 实现本地用户登录时的session token创建
+
+### 前端改造
+- [x] 创建client/src/components/LoginDialog.tsx登录组件
+- [x] 实现本地用户注册表单（用户名、邮箱、昵称、密码）
+- [x] 实现本地用户登录表单（用户名、密码）
+- [x] 实现Manus SSO登录选项
+- [x] 使用Tabs组件实现三种登录方式切换
+- [x] 集成tRPC调用后端认证API
+- [x] 修改Home.tsx集成LoginDialog组件
+- [x] 移除原有的单一登录按钮
+
+### 功能特性
+- [x] 支持本地用户注册和登录
+- [x] 支持Manus SSO登录
+- [x] 密码加密存储（bcrypt）
+- [x] 用户账户激活状态管理
+- [x] 登录失败错误提示
+- [x] 密码强度验证（至少6个字符）
+- [x] 邮箱格式验证
+- [x] 用户名唯一性检查
+- [x] 注册后自动登录
+
+### 测试验证
+- [ ] 本地用户注册功能测试
+- [ ] 本地用户登录功能测试
+- [ ] 密码加密验证
+- [ ] Manus SSO登录功能测试
+- [ ] 用户信息持久化测试
+- [ ] 会话管理测试
+- [ ] 浏览器兼容性测试

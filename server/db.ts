@@ -32,10 +32,15 @@ export async function getDb() {
 /**
  * 用户相关查询
  */
-export async function upsertUser(user: InsertUser): Promise<void> {
+
+/**
+ * 通过Manus OpenID更新或创建用户（SSO用户）
+ */
+export async function upsertUser(user: Partial<InsertUser> & { openId: string; authType?: "local" | "manus" }): Promise<void> {
   if (!user.openId) {
     throw new Error("User openId is required for upsert");
   }
+  const authType = user.authType || "manus";
 
   const db = await getDb();
   if (!db) {
@@ -44,8 +49,9 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   }
 
   try {
-    const values: InsertUser = {
+    const values: any = {
       openId: user.openId,
+      authType: authType,
     };
     const updateSet: Record<string, unknown> = {};
 
@@ -91,6 +97,9 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   }
 }
 
+/**
+ * 通过Manus OpenID查询用户
+ */
 export async function getUser(openId: string) {
   const db = await getDb();
   if (!db) {
@@ -100,6 +109,62 @@ export async function getUser(openId: string) {
 
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
   return result.length > 0 ? result[0] : undefined;
+}
+
+/**
+ * 通过用户名查询本地用户
+ */
+export async function getUserByUsername(username: string) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get user: database not available");
+    return undefined;
+  }
+
+  const result = await db.select().from(users).where(eq(users.username as any, username)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+/**
+ * 创建本地用户
+ */
+export async function createLocalUser(user: {
+  username: string;
+  password: string;
+  email?: string;
+  name?: string;
+}): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(users).values({
+    username: user.username,
+    password: user.password,
+    email: user.email || null,
+    name: user.name || null,
+    authType: "local",
+    lastSignedIn: new Date(),
+  } as any);
+
+  // 查询新创建的用户以获取ID
+  const result = await db.select().from(users).where(eq(users.username, user.username)).limit(1);
+  if (result.length === 0) {
+    throw new Error("Failed to create user");
+  }
+  return result[0].id;
+}
+
+/**
+ * 更新用户最后登录时间
+ */
+export async function updateUserLastSignedIn(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db
+    .update(users)
+    .set({ lastSignedIn: new Date() })
+    .where(eq(users.id, userId));
 }
 
 /**
@@ -262,4 +327,3 @@ export async function getUserQueryHistory(userId: number, limit: number = 50) {
     .orderBy(desc(queryHistory.createdAt))
     .limit(limit);
 }
-

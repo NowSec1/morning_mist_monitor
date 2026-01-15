@@ -1,15 +1,25 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, json } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, json, boolean } from "drizzle-orm/mysql-core";
 
 /**
  * 核心用户表
+ * 支持两种认证方式：
+ * 1. Manus SSO - 通过openId识别，password为null
+ * 2. 本地用户 - 通过username和password认证，openId为null
  */
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
-  openId: varchar("openId", { length: 64 }).notNull().unique(),
+  // Manus SSO字段
+  openId: varchar("openId", { length: 64 }).unique(), // Manus OAuth identifier，本地用户为null
+  // 本地用户字段
+  username: varchar("username", { length: 64 }).unique(), // 本地用户名，SSO用户为null
+  password: text("password"), // 本地用户密码（bcrypt hash），SSO用户为null
+  // 公共字段
   name: text("name"),
   email: varchar("email", { length: 320 }),
+  authType: mysqlEnum("authType", ["local", "manus"]).notNull(), // 认证类型
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  isActive: boolean("isActive").default(true).notNull(), // 账户是否激活
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -101,6 +111,3 @@ export const queryHistory = mysqlTable("query_history", {
 
 export type QueryHistory = typeof queryHistory.$inferSelect;
 export type InsertQueryHistory = typeof queryHistory.$inferInsert;
-
-
-

@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, username, authType, isActive, LENGTH(password) as password_length FROM users WHERE username = 'test';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 7wt9HzDsXZwtqQa.root --database mQm58o4gHWxJVnHcGVSxRm --execute SELECT id, username, authType, isActive, LENGTH(password) as password_length FROM users WHERE username = 'test';",
+  "rows": [
+    {
+      "id": "4560031",
+      "username": "test",
+      "authType": "local",
+      "isActive": "1",
+      "password_length": "60"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tusername\tauthType\tisActive\tpassword_length\n4560031\ttest\tlocal\t1\t60\n",
+  "stderr": "",
+  "execution_time_ms": 1500
+}

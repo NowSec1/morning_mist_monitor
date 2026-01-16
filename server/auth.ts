@@ -81,9 +81,12 @@ export async function loginLocalUser(
   password: string
 ): Promise<{ success: boolean; userId?: number; user?: any; error?: string }> {
   try {
+    console.log("[Auth] Attempting login for username:", username);
     // 查询用户
     const user = await db.getUserByUsername(username);
+    console.log("[Auth] User query result:", user ? "Found" : "Not found");
     if (!user) {
+      console.warn("[Auth] User not found for username:", username);
       return { success: false, error: "用户名或密码错误" };
     }
 

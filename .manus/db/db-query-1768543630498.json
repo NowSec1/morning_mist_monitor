@@ -1,0 +1,19 @@
+{
+  "query": "SELECT id, username, email, name, authType, isActive, password FROM users WHERE username = 'test';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 7wt9HzDsXZwtqQa.root --database mQm58o4gHWxJVnHcGVSxRm --execute SELECT id, username, email, name, authType, isActive, password FROM users WHERE username = 'test';",
+  "rows": [
+    {
+      "id": "4560031",
+      "username": "test",
+      "email": "NULL",
+      "name": "NULL",
+      "authType": "local",
+      "isActive": "1",
+      "password": "$2b$10$LRpsMbPEt/2IpyuvH9bBqOJIKZo33U0xbLmZ/r3hSCgN6EZLpYM.i"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tusername\temail\tname\tauthType\tisActive\tpassword\n4560031\ttest\tNULL\tNULL\tlocal\t1\t$2b$10$LRpsMbPEt/2IpyuvH9bBqOJIKZo33U0xbLmZ/r3hSCgN6EZLpYM.i\n",
+  "stderr": "",
+  "execution_time_ms": 1528
+}

@@ -121,8 +121,18 @@ export async function getUserByUsername(username: string) {
     return undefined;
   }
 
-  const result = await db.select().from(users).where(eq(users.username as any, username)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
+  try {
+    console.log("[Database] Querying user by username:", username);
+    const result = await db.select().from(users).where(eq(users.username as any, username)).limit(1);
+    console.log("[Database] Query result count:", result.length);
+    if (result.length > 0) {
+      console.log("[Database] User found:", { id: result[0].id, username: result[0].username });
+    }
+    return result.length > 0 ? result[0] : undefined;
+  } catch (error) {
+    console.error("[Database] Error querying user by username:", error);
+    throw error;
+  }
 }
 
 /**

@@ -1,0 +1,186 @@
+{
+  "query": "SELECT id, username, email, name, authType, isActive FROM users WHERE authType = 'local' OR username IS NOT NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 7wt9HzDsXZwtqQa.root --database mQm58o4gHWxJVnHcGVSxRm --execute SELECT id, username, email, name, authType, isActive FROM users WHERE authType = 'local' OR username IS NOT NULL;",
+  "rows": [
+    {
+      "id": "1",
+      "username": "NULL",
+      "email": "jacobwong507@foxmail.com",
+      "name": "Wang",
+      "authType": "local",
+      "isActive": "1"
+    },
+    {
+      "id": "120003",
+      "username": "NULL",
+      "email": "a995609409@icloud.com",
+      "name": "帅 王",
+      "authType": "local",
+      "isActive": "1"
+    },
+    {
+      "id": "720014",
+      "username": "NULL",
+      "email": "jacobwang507@gmail.com",
+      "name": "JacobWang",
+      "authType": "local",
+      "isActive": "1"
+    },
+    {
+      "id": "4560003",
+      "username": "test_user_1768488148140",
+      "email": "test@example.com",
+      "name": "Test User",
+      "authType": "local",
+      "isActive": "1"
+    },
+    {
+      "id": "4560004",
+      "username": "duplicate_test_1768488150484",
+      "email": "test1_1768488150484@example.com",
+      "name": "NULL",
+      "authType": "local",
+      "isActive": "1"
+    },
+    {
+      "id": "4560005",
+      "username": "duplicate_test_1768488151024",
+      "email": "test2_1768488151024@example.com",
+      "name": "NULL",
+      "authType": "local",
+      "isActive": "1"
+    },
+    {
+      "id": "4560006",
+      "username": "no_email_1768488152036",
+      "email": "NULL",
+      "name": "No Email User",
+      "authType": "local",
+      "isActive": "1"
+    },
+    {
+      "id": "4560007",
+      "username": "login_test_1768488152578",
+      "email": "login_1768488152578@example.com",
+      "name": "Login Test User",
+      "authType": "local",
+      "isActive": "1"
+    },
+    {
+      "id": "4560008",
+      "username": "integrity_test_1768488155275",
+      "email": "integrity_1768488155275@example.com",
+      "name": "Integrity Test User",
+      "authType": "local",
+      "isActive": "1"
+    },
+    {
+      "id": "4560009",
+      "username": "test_user_1768488183512",
+      "email": "test@example.com",
+      "name": "Test User",
+      "authType": "local",
+      "isActive": "1"
+    },
+    {
+      "id": "4560010",
+      "username": "duplicate_test_1768488185901",
+      "email": "test1_1768488185901@example.com",
+      "name": "NULL",
+      "authType": "local",
+      "isActive": "1"
+    },
+    {
+      "id": "4560011",
+      "username": "duplicate_test_1768488186639",
+      "email": "test2_1768488186639@example.com",
+      "name": "NULL",
+      "authType": "local",
+      "isActive": "1"
+    },
+    {
+      "id": "4560012",
+      "username": "no_email_1768488187834",
+      "email": "NULL",
+      "name": "No Email User",
+      "authType": "local",
+      "isActive": "1"
+    },
+    {
+      "id": "4560013",
+      "username": "login_test_1768488188568",
+      "email": "login_1768488188568@example.com",
+      "name": "Login Test User",
+      "authType": "local",
+      "isActive": "1"
+    },
+    {
+      "id": "4560014",
+      "username": "integrity_test_1768488191349",
+      "email": "integrity_1768488191349@example.com",
+      "name": "Integrity Test User",
+      "authType": "local",
+      "isActive": "1"
+    },
+    {
+      "id": "4560015",
+      "username": "test_user_1768488222066",
+      "email": "test@example.com",
+      "name": "Test User",
+      "authType": "local",
+      "isActive": "1"
+    },
+    {
+      "id": "4560016",
+      "username": "duplicate_test_1768488224387_0.9783356723778611",
+      "email": "test1_1768488224387@example.com",
+      "name": "NULL",
+      "authType": "local",
+      "isActive": "1"
+    },
+    {
+      "id": "4560017",
+      "username": "no_email_1768488225746_0.05751644712406234",
+      "email": "NULL",
+      "name": "No Email User",
+      "authType": "local",
+      "isActive": "1"
+    },
+    {
+      "id": "4560018",
+      "username": "login_test_1768488226456",
+      "email": "login_1768488226456@example.com",
+      "name": "Login Test User",
+      "authType": "local",
+      "isActive": "1"
+    },
+    {
+      "id": "4560019",
+      "username": "integrity_test_1768488229138",
+      "email": "integrity_1768488229138@example.com",
+      "name": "Integrity Test User",
+      "authType": "local",
+      "isActive": "1"
+    },
+    {
+      "id": "4560028",
+      "username": "testuser",
+      "email": "NULL",
+      "name": "NULL",
+      "authType": "local",
+      "isActive": "1"
+    },
+    {
+      "id": "4560031",
+      "username": "test",
+      "email": "NULL",
+      "name": "NULL",
+      "authType": "local",
+      "isActive": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tusername\temail\tname\tauthType\tisActive\n1\tNULL\tjacobwong507@foxmail.com\tWang\tlocal\t1\n120003\tNULL\ta995609409@icloud.com\t帅 王\tlocal\t1\n720014\tNULL\tjacobwang507@gmail.com\tJacobWang\tlocal\t1\n4560003\ttest_user_1768488148140\ttest@example.com\tTest User\tlocal\t1\n4560004\tduplicate_test_1768488150484\ttest1_1768488150484@example.com\tNULL\tlocal\t1\n4560005\tduplicate_test_1768488151024\ttest2_1768488151024@example.com\tNULL\tlocal\t1\n4560006\tno_email_1768488152036\tNULL\tNo Email User\tlocal\t1\n4560007\tlogin_test_1768488152578\tlogin_1768488152578@example.com\tLogin Test User\tlocal\t1\n4560008\tintegrity_test_1768488155275\tintegrity_1768488155275@example.com\tIntegrity Test User\tlocal\t1\n4560009\ttest_user_1768488183512\ttest@example.com\tTest User\tlocal\t1\n4560010\tduplicate_test_1768488185901\ttest1_1768488185901@example.com\tNULL\tlocal\t1\n4560011\tduplicate_test_1768488186639\ttest2_1768488186639@example.com\tNULL\tlocal\t1\n4560012\tno_email_1768488187834\tNULL\tNo Email User\tlocal\t1\n4560013\tlogin_test_1768488188568\tlogin_1768488188568@example.com\tLogin Test User\tlocal\t1\n4560014\tintegrity_test_1768488191349\tintegrity_1768488191349@example.com\tIntegrity Test User\tlocal\t1\n4560015\ttest_user_1768488222066\ttest@example.com\tTest User\tlocal\t1\n4560016\tduplicate_test_1768488224387_0.9783356723778611\ttest1_1768488224387@example.com\tNULL\tlocal\t1\n4560017\tno_email_1768488225746_0.05751644712406234\tNULL\tNo Email User\tlocal\t1\n4560018\tlogin_test_1768488226456\tlogin_1768488226456@example.com\tLogin Test User\tlocal\t1\n4560019\tintegrity_test_1768488229138\tintegrity_1768488229138@example.com\tIntegrity Test User\tlocal\t1\n4560028\ttestuser\tNULL\tNULL\tlocal\t1\n4560031\ttest\tNULL\tNULL\tlocal\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1542
+}

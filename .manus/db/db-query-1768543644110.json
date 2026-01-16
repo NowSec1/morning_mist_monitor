@@ -1,0 +1,20 @@
+{
+  "query": "SELECT id, username, email, name, authType, isActive, LENGTH(password) as password_length, SUBSTRING(password, 1, 20) as password_preview FROM users WHERE username = 'test';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 7wt9HzDsXZwtqQa.root --database mQm58o4gHWxJVnHcGVSxRm --execute SELECT id, username, email, name, authType, isActive, LENGTH(password) as password_length, SUBSTRING(password, 1, 20) as password_preview FROM users WHERE username = 'test';",
+  "rows": [
+    {
+      "id": "4560031",
+      "username": "test",
+      "email": "NULL",
+      "name": "NULL",
+      "authType": "local",
+      "isActive": "1",
+      "password_length": "60",
+      "password_preview": "$2b$10$LRpsMbPEt/2Ip"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tusername\temail\tname\tauthType\tisActive\tpassword_length\tpassword_preview\n4560031\ttest\tNULL\tNULL\tlocal\t1\t60\t$2b$10$LRpsMbPEt/2Ip\n",
+  "stderr": "",
+  "execution_time_ms": 1496
+}
